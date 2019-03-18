@@ -175,7 +175,17 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         # Referencing the original paper (https://arxiv.org/abs/1502.03167)   #
         # might prove to be helpful.                                          #
         #######################################################################
-        pass
+        running_mean = np.mean(x, axis=0)
+        running_var = np.var(x, axis=0)
+        # print("running mean:",running_mean)
+        # print("running var:",running_var)
+        # print(x)
+        # print(x-running_mean)
+        # print(np.mean(x-running_mean,axis=0))
+
+        x_norm = (x - running_mean) / np.sqrt(running_var)
+        out = x_norm * gamma + beta
+        cache = (x_norm, running_mean, running_var, gamma, N, x)
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -183,10 +193,10 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         # TODO: Implement the test-time forward pass for batch normalization. #
         # Use the running mean and variance to normalize the incoming data,   #
-        # then scale and shift the normalized data using gamma and beta.      #
+        # then scale and shift the normalized data using gamma and beta.      #`
         # Store the result in the out variable.                               #
         #######################################################################
-        pass
+        out = (x - running_mean) / np.sqrt(running_var) * gamma + beta
         #######################################################################
         #                          END OF YOUR CODE                           #
         #######################################################################
@@ -224,8 +234,19 @@ def batchnorm_backward(dout, cache):
     # Referencing the original paper (https://arxiv.org/abs/1502.03167)       #
     # might prove to be helpful.                                              #
     ###########################################################################
-    pass
-    ###########################################################################
+    x_norm, running_mean, running_var, gamma, N, x = cache
+
+    dx_norm = dout * gamma
+    dsigma_square = np.sum(dx_norm * (x - running_mean) * (-0.5) * running_var ** (-3 / 2), axis=0)
+    dmu = np.sum(dx_norm * (-1) / (np.sqrt(running_var)), axis=0) + dsigma_square * np.sum((-2) * (x - running_mean),
+                                                                                           axis=0) / N
+    dx = dx_norm / np.sqrt(running_var) + 1 / N * dmu + dsigma_square * 2 * (x - running_mean) / N
+
+    # print(np.sum((-2) * (x - running_mean), axis=0)) check zero
+
+    dgamma = (dout * x_norm).sum(axis=0)
+    dbeta = dout.sum(axis=0)
+    #################std_x##########################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
 
@@ -624,7 +645,7 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     - cache: Values needed for the backward pass
     """
     out, cache = None, None
-    eps = gn_param.get('eps',1e-5)
+    eps = gn_param.get('eps', 1e-5)
     ###########################################################################
     # TODO: Implement the forward pass for spatial group normalization.       #
     # This will be extremely similar to the layer norm implementation.        #
