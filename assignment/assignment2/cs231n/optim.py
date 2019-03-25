@@ -74,7 +74,6 @@ def sgd_momentum(w, dw, config=None):
     return next_w, config
 
 
-
 def rmsprop(w, dw, config=None):
     """
     Uses the RMSProp update rule, which uses a moving average of squared
@@ -130,7 +129,20 @@ def adam(w, dw, config=None):
     config.setdefault('v', np.zeros_like(w))
     config.setdefault('t', 0)
 
-    next_w = None
+    learning_rate, beta1, beta2, epsilon, m, v, t = (config['learning_rate'],
+                                                     config['beta1'],
+                                                     config['beta2'],
+                                                     config['epsilon'],
+                                                     config['m'],
+                                                     config['v'],
+                                                     config['t'])
+
+    # m = beta1 * m + (1 - beta1) * dw
+    # v = beta2 * v + (1 - beta2) * (np.linalg.norm(dw))**2
+    # next_w = w - learning_rate * m / np.sqrt(epsilon + v)
+
+    next_w = w -  0.00001 * dw
+
     ###########################################################################
     # TODO: Implement the Adam update formula, storing the next value of w in #
     # the next_w variable. Don't forget to update the m, v, and t variables   #
@@ -139,7 +151,6 @@ def adam(w, dw, config=None):
     # NOTE: In order to match the reference output, please modify t _before_  #
     # using it in any calculations.                                           #
     ###########################################################################
-    pass
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
